@@ -8,7 +8,7 @@ import pandas as pd
 MAIN_PATH = "."
 
 TE_BLAST_IDENT_PRC = 90
-GENOME_BLAST_IDENT_PRC = 90
+GENOME_BLAST_IDENT_PRC = 80
 
 TE_IN = ""
 ONT_IN = ""
@@ -33,6 +33,7 @@ class Blast:
             os.system(f"makeblastdb -in {f} -dbtype nucl -out {name}")
         logging.info("end make db")
 
+    # todo not use
     def _run_blast(self, path, query, db, out):
         cmd = (
             f"blastn -num_threads 20 -outfmt 6 -query {query} "
@@ -53,9 +54,6 @@ class Blast:
                 f"-db {name_path} -out {te_ont_path} -dust no -perc_identity {TE_BLAST_IDENT_PRC/100}"
             )
             os.system(cmd)
-
-        # todo k value
-        # todo _run_blast
         logging.info("end run blast")
 
     # todo
