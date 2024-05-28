@@ -11,81 +11,6 @@ from helpers import Helpers
 from config import Config
 from mask_genome import mask_genome
 
-MAIN_PATH = "."
-
-TE_BLAST_IDENT_PRC = 90
-GENOME_BLAST_IDENT_PRC = 80
-
-ont = ["ccc"]
-ont = [
-    "K10B",
-    "K10f",
-    "LK5_1_3"
-]
-genome_path = "genome/DCARv3.4.fa"
-genome_path = "genome/genomic2.fna"
-te_path = "te/Alex1_3.fas"
-dif_percent = 30
-
-#te_name = 'Alex1'
-#te_len = Helpers.get_len_fasta(te_path)[te_name]
-#from_te = Helpers.get_from_te(te_path, te_name)
-#to_te = Helpers.get_to_te(te_path, te_name)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# first part
-"""
-x(start_df, end_df, strain, ont_file) #cale 2 df
-xx(start_record, end_df, strain) # jesli znajdzie dopasowuje prawo
-xxx(start_record, end_record) # True False
-
-"""
-
-
-# second part
-
 
 class SecondService:
     def __init__(self):
@@ -158,27 +83,7 @@ class SecondService:
                 return right_row
         return None
 
-    def match_not_ideal_pairs(self, left_df, right_df, ont_file, is_plus_strain):
-        # add left and right if find
-        # iterate chromosome
-        # only one id
-        start_df = left_df.sort_values(by=['sseqid', 'length', self.get_start_field(is_plus_strain)])
-        end_df = right_df.sort_values(by=['sseqid', 'length', self.get_end_field(is_plus_strain)])
-        if not len(start_df) or not len(end_df):
-            return False
-        for chromosome in start_df.sseqid.unique():
-            l_df = start_df[(start_df.sseqid == chromosome)]
-            r_df = end_df[(end_df.sseqid == chromosome)]
-            for start_row in l_df.itertuples():
-                matched_right_record = self.match_rec_df(start_row, r_df, is_plus_strain)
-                if matched_right_record is not None:
-                    if is_plus_strain:
-                        self.add_start(start_row, ont_file, is_plus_strain)
-                        self.add_end(matched_right_record, ont_file, is_plus_strain)
-                    return True
-
-        return False
-    def match_ideal_pairs(self, left_df, right_df, ont_file, is_plus_strain):
+    def match_pairs(self, left_df, right_df, ont_file, is_plus_strain):
         # add left and right if find
         # iterate chromosome
         # only one id
@@ -220,31 +125,19 @@ class SecondService:
         for ont_id in all_ids:
             left = left_df[left_df.qseqid == ont_id]
             right = right_df[right_df.qseqid == ont_id]
-            self.match_ideal_pairs(left, right, ont_file, is_plus_strain)
-
-        # todo - now
+            self.match_pairs(left, right, ont_file, is_plus_strain)
+        # msstch 2
         is_the_same_n = False
         while not is_the_same_n:
             n = len(self.used_ids)
             not_used_start_records = left_df[~left_df.qseqid.isin(self.used_ids)]
             not_used_end_records = right_df[~right_df.qseqid.isin(self.used_ids)]
             self.match_not_ideal_pairs(not_used_start_records, not_used_end_records, ont_file, is_plus_strain)
-            print("owidixi")
             if len(self.used_ids) == n:
                 is_the_same_n = True
 
-
-        used_start_records = left_df[left_df.qseqid.isin(self.used_ids)]
-        used_end_records = right_df[right_df.qseqid.isin(self.used_ids)]
-        for not_used_start_record in not_used_start_records.itertuples():
-            for used_start_record in used_start_records.itertuples():
-                start1 = getattr(not_used_start_record, self.get_start_field(is_plus_strain))
-                start2 = getattr(used_start_record, self.get_start_field(is_plus_strain))
-                if abs(start1 - start2) < 300:
-                    print('konik')
-
     # main function
-    def xxx(self, left_blast, right_blast, ont_file):
+    def add_start_and_end_te(self, left_blast, right_blast, ont_file):
         left_blast = left_blast[left_blast.length > 600]
         right_blast = right_blast[right_blast.length > 600]
 
@@ -269,9 +162,6 @@ class SecondService:
         ).sort_values(['qseqid', 'bitscore'], ascending=False).groupby(['qseqid'], as_index=False).first()
 
     def blast(self, o, blast_db=True):
-        print('********************')
-        print(f"results/first/subseq/left_m_TE_{o}_{self.te_name}_subseq.fasta")
-        print('********************')
         left_m = self.ont_to_genome_blast(
             f"results/first/subseq/left_m_TE_{o}_{self.te_name}_subseq.fasta",
             f"second/left_m_{o}_{self.te_name}_genome.bl",
@@ -306,10 +196,10 @@ class SecondService:
         os.system("mkdir -p second")
         pd.options.mode.copy_on_write = True
         if blast_db:
-            Blast.make_db(genome_path, self.masked_database)
-        for o in ont:
+            Blast.make_db(self.config.genome_filepath, self.masked_database)
+        for o in self.config.ont_bases:
             for left_blast, right_blast in self.blast(o, blast_db):
-                self.xxx(left_blast, right_blast, o)
+                self.add_start_and_end_te(left_blast, right_blast, o)
 
         for ont_file, start_records in self.plus_te_start_records.items():
             for start_record in start_records:
@@ -325,13 +215,6 @@ class SecondService:
             for end_record in end_records:
                 self.save_to_file(end_record, False, False, ont_file)
         return pd.read_csv(self.config.filtered_records_filepath, sep="\t")
-
-
-
-
-
-
-
 
 
 
@@ -400,7 +283,7 @@ class ThirdService:
         }
 
 
-    def xxxx(self, start_chromosome, start, start_records, end_dict):
+    def match_end_dict(self, start_chromosome, start, start_records, end_dict):
         for (end_chromosome, end), end_records in end_dict.items():
             if self.if_match(start_chromosome, end_chromosome, start, end):
                 return (end_chromosome, end),  self.create_record(
@@ -411,32 +294,19 @@ class ThirdService:
                     end_records
                 )
 
-    def match(self, start_dict, end_dict):
+    def match_dicts(self, start_dict, end_dict):
         report_list = []
         start_remaining = start_dict.copy()
         end_remaining = end_dict.copy()
         for (start_chromosome, start), start_records in start_dict.items():
             end_dict = end_remaining.copy()
-            xxxxx = self.xxxx(start_chromosome, start, start_records, end_dict)
-            if xxxxx:
+            record = self.match_end_dict(start_chromosome, start, start_records, end_dict)
+            if record:
                 report_list.append(
-                    xxxxx[1]
+                    record[1]
                 )
                 del start_remaining[start_chromosome, start]
-                del end_remaining[xxxxx[0][0], xxxxx[0][1]]
-            """
-            for (end_chromosome, end), end_records in end_dict.items():
-                if self.if_match(start_chromosome, end_chromosome, start, end):
-                    report_list.append(
-                        self.create_record(
-                            start_chromosome,
-                            start,
-                            end,
-                            start_records,
-                            end_records
-                        )
-                    )
-            """
+                del end_remaining[record[0][0], record[0][1]]
             # todo if not match?
         return report_list
 
@@ -464,7 +334,7 @@ class ThirdService:
         start_dict = self.get_groups_dict(start_groups, "start")
         end_dict = self.get_groups_dict(end_groups, "stop")
 
-        report_list = self.match(start_dict, end_dict)
+        report_list = self.match_dicts(start_dict, end_dict)
 
         self.save_report(report_list)
 
@@ -517,7 +387,7 @@ class ThirdService:
     def generate_second_report(self, reference):
         report_header = ["pkt", "chromosome", "start", "stop", "length", "is_ref"]
         df = pd.read_csv(self.config.raw_report_filepath, sep="\t")
-        for o in ont:
+        for o in self.config.ont_bases:
             df[f"left_{o}_num"] = df.left_rec.apply(
                 self.get_num,
                 args=[o]
@@ -545,7 +415,6 @@ class ThirdService:
         df.loc[(df.length > 600), 'is_ref'] = "unknown"
         df.loc[is_reff, 'is_ref'] = "ref"
 
-        print(report_header)
         report = df[report_header].sort_values(by=['chromosome', 'pkt', 'start'])
         report.to_csv(self.config.final_report_filepath, sep='\t', index=False, encoding='utf-8', header=True)
         return report
@@ -553,7 +422,7 @@ class ThirdService:
     def run(self):
         self.raw_report = pd.read_csv(self.config.filtered_records_filepath, sep="\t")
         reference = mask_genome()
-
         first_report = self.save_first_point_report()
         second_report = self.generate_second_report(reference)
+        return first_report, second_report
 

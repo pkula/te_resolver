@@ -13,21 +13,6 @@ class FirstService:
         self.config = Config()
 
     #checked
-    @staticmethod
-    def from_fq_to_fa(fq):
-        # change fq.gz into fasta (for blast)
-        fq = Path(fq).absolute()
-        basename = Path(fq).name.split(".")[0]
-        os.system(f"seqtk seq -a {fq} > {fq.parent / basename}.fasta")
-
-    def run(self, fq=True, create_db=True, do_blast=True):
-        if fq:
-            self.convert_fq()
-        if create_db:
-            Blast.make_ont_db(self.config)
-        if do_blast:
-            Blast.run_te_ont(self.config)
-        self.first_part()
 
     def _first_part(self, o, te_ont_bl, is_plus_strain):
         x = "p" if is_plus_strain else "m"
@@ -76,6 +61,13 @@ class FirstService:
         # site p or m
         num = 4000
 
+        # todo filenames
+        parent = filename.parent
+        f = filename.name
+        with open(parent / f"{'left_' + f}", 'w'):
+            pass
+        with open(parent / f"{'right_' + f}", 'w'):
+            pass
 
         records = SeqIO.parse(fasta, 'fasta')
         record_dict = SeqIO.to_dict(records)
@@ -95,17 +87,34 @@ class FirstService:
             left_subseq_record = record[left_start:left_end]  # For the full record (with header)
             right_subseq_record = record[right_start:right_end]
 
-            # todo filenames
-            f = filename.name
-            parent = filename.parent
             with open(parent / f"{'left_' + f}", 'a') as file:
                 file.write(f">{record.id}\n{left_subseq_record.seq}\n")
             with open(parent / f"{'right_' + f}", 'a') as file:
                 file.write(f">{record.id}\n{right_subseq_record.seq}\n")
 
-    # checked
     def convert_fq(self):
         logging.info("start converting pass from fastaq to fasta")
         for f in self.config.ont_path.glob("*.fastq.gz"):
             self.from_fq_to_fa(f)
         logging.info("end converting pass to fasta")
+
+    @staticmethod
+    def from_fq_to_fa(fq):
+        # change fq.gz into fasta (for blast)
+        fq = Path(fq).absolute()
+        basename = Path(fq).name.split(".")[0]
+        os.system(f"seqtk seq -a {fq} > {fq.parent / basename}.fasta")
+
+    def run(self, fq=True, create_db=True, do_blast=True):
+        print("start first service")
+        if fq:
+            print("convert fq")
+            self.convert_fq()
+        if create_db:
+            print("make blast")
+            Blast.make_ont_db(self.config)
+        if do_blast:
+            print("do blast")
+            Blast.run_te_ont(self.config)
+        self.first_part()
+        print("end first service")

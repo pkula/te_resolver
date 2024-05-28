@@ -29,38 +29,44 @@ class Config:
         parser = self.prepare_parser()
         self.args = parser.parse_args()
 
+        # main filders
         self.main_path = Path(MAIN_PATH).absolute()
+        self.results_path = self.main_path / "results"
+
+        # input data
         self.genome_path = self.main_path / "genome"
-        self.second_path = self.main_path / "second"
         self.ont_path = self.main_path / "ont"
         self.te_path = self.main_path / "te"
-        self.masked_genome_path = self.main_path / "masked_genome"
 
+        # args
         self.te_name = TE_NAME
         self.te_filepath = self.te_path / TE_FILE
         self.genome_filepath = self.genome_path / GENOME_FILE
 
-        self.report_filebase = f"{self.genome_filepath.stem}_{'_'.join(self.ont_bases)}"
-        self.filtered_records_filepath = self.main_path / f"filtered_{self.report_filebase}"
-        self.raw_report_filepath = self.main_path / f"raw_report_{self.report_filebase}"
-        self.final_report_filepath = self.main_path / f"final_report_{self.report_filebase}"
-
-
-        # set needed paths
-
-
-        self.results_path = self.main_path / "results"
-
+        # first part
         self.first_path = self.results_path / "first"
         self.first_blast_path = self.first_path / "blast"
         self.first_bed_path = self.first_path / "bed"
         self.first_subseq_path = self.first_path / "subseq"
 
+        # second part
+        self.second_path = self.results_path / "second"
+        self.report_filebase = f"{self.genome_filepath.stem}_{'_'.join(self.ont_bases)}"
+        self.filtered_records_filepath = self.second_path / f"filtered_{self.report_filebase}"
+        self.raw_report_filepath = self.second_path / f"raw_report_{self.report_filebase}"
+        self.final_report_filepath = self.second_path / f"final_report_{self.report_filebase}"
+
+        # masked genome
+        self.masked_genome_path = self.results_path / "masked_genome"
+
+        # set needed paths
         self.te_len = Helpers.get_len_fasta(self.te_filepath)[self.te_name]
         self.from_te = Helpers.get_from_te(self.te_filepath, self.te_name)
         self.to_te = Helpers.get_to_te(self.te_filepath, self.te_name)
 
-
+        print(f"ONT: {self.ont_bases}")
+        print(f"Genome: {self.genome_filepath}")
+        print(f"TE: {self.te_name}")
 
         self.create_directories()
         logging.info("end config")

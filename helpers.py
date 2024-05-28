@@ -52,9 +52,8 @@ class Helpers:
 
     @staticmethod
     def read_bl(filename):
-        headers = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch', 'gapopen', 'qstart', 'qend', 'sstart', 'send', 'expect value', 'bitscore']
-        headers_dict = {i[0]: i[1] for i in enumerate(headers)}
-        return pd.read_csv(filename, sep="\t", header=None).rename(headers_dict, axis=1)
+        header_names = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch', 'gapopen', 'qstart', 'qend', 'sstart', 'send', 'expect value', 'bitscore']
+        return pd.read_csv(filename, sep="\t", header=None, names=header_names)
 
     @staticmethod
     def save_df(df, filename):
