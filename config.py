@@ -51,7 +51,7 @@ class Config:
 
         # second part
         self.second_path = self.results_path / "second"
-        self.report_filebase = f"{self.genome_filepath.stem}_{'_'.join(self.ont_bases)}"
+        self.report_filebase = f"{self.genome_filepath.stem}_{'_'.join(self.ont_bases)}_{self.te_name}"
         self.filtered_records_filepath = self.second_path / f"filtered_{self.report_filebase}"
         self.raw_report_filepath = self.second_path / f"raw_report_{self.report_filebase}"
         self.final_report_filepath = self.second_path / f"final_report_{self.report_filebase}"
@@ -89,3 +89,11 @@ class Config:
     @property
     def ont_bases(self):
         return [f.stem for f in self.ont_files]
+
+    def get_te_ont_bl_path(self, ont_filebase):
+        return self.first_blast_path / f"TE_{self.genome_filepath.stem}_{ont_filebase}_{self.te_name}.bl"
+
+    def get_ont_filepath_from_ont_base(self, ont_filebase):
+        for file in self.ont_files:
+            if file.stem == ont_filebase:
+                return file

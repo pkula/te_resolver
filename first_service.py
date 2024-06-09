@@ -14,7 +14,8 @@ class FirstService:
 
     #checked
 
-    def _first_part(self, o, te_ont_bl, is_plus_strain):
+    def _first_part(self, ont_base, te_ont_bl, is_plus_strain):
+        o = self.config.get_te_ont_bl_path(ont_base)
         x = "p" if is_plus_strain else "m"
 
         basename = f"{x}_{o.stem}"
@@ -24,8 +25,7 @@ class FirstService:
         raw_subseq_filename = self.config.first_subseq_path / f"raw_{basename}_subseq.fasta"
         subseq_filename = self.config.first_subseq_path / f"{basename}_subseq.fasta"
 
-        fasta = [base for base in self.config.ont_bases if base in f"{o}"][0]
-        fasta_file =  self.config.ont_path / f"{fasta}.fasta"
+        fasta_file = self.config.get_ont_filepath_from_ont_base(ont_base)
 
         start_field = "sstart" if is_plus_strain else "send"
         end_field = "send" if is_plus_strain else "sstart"
@@ -36,8 +36,7 @@ class FirstService:
         os.system(
             f"bedtools merge -i {bed_filename} -d 1500 -c 4 -o collapse  > {merge_filename}")
         merged = pd.read_csv(
-            f"{merge_filename}", sep="\t", header=None).rename(
-            {0: 'sseqid', 1: 'sstart', 2: 'send', 3: 'qseqid'}, axis=1
+            f"{merge_filename}", sep="\t", header=None, names=['sseqid', 'sstart', 'send', 'qseqid']
         )
         filtered_bed = merged[(merged.send - merged.sstart) > self.config.from_te]
         Helpers.save_df(pd.DataFrame({'id': filtered_bed['sseqid'].unique()}), txt_filename)
@@ -47,13 +46,12 @@ class FirstService:
 
 
     def first_part(self):
-        for o in self.config.first_blast_path.glob("*.bl"):
-
-            te_ont_bl = Helpers.read_bl(o)
+        for ont_base in self.config.ont_bases:
+            te_ont_bl = Helpers.read_bl(self.config.get_te_ont_bl_path(ont_base))
             te_ont_bl = te_ont_bl[te_ont_bl.qseqid.str.contains(self.config.te_name)]
 
-            self._first_part(o, te_ont_bl[te_ont_bl.sstart <= te_ont_bl.send], True)
-            self._first_part(o, te_ont_bl[te_ont_bl.sstart > te_ont_bl.send], False)
+            self._first_part(ont_base, te_ont_bl[te_ont_bl.sstart <= te_ont_bl.send], True)
+            self._first_part(ont_base, te_ont_bl[te_ont_bl.sstart > te_ont_bl.send], False)
 
 
     def create_subsequent_fasta(self, fasta, bed_df, filename):

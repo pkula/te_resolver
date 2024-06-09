@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import pandas as pd
 from helpers import Helpers
+from config import Config
 
 
 class Blast:
@@ -38,7 +39,11 @@ class Blast:
     @staticmethod
     def run_te_ont(config):
         for base in config.ont_bases:
-            Blast._run_te_ont(config.te_filepath, config.ont_path / base, f"{config.first_blast_path}/TE_{base}_{config.te_name}.bl")
+            Blast._run_te_ont(
+                config.te_filepath,
+                config.ont_path / base,
+                config.get_te_ont_bl_path(base),
+                )
 
     @staticmethod
     def run(query, db, out):

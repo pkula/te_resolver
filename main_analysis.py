@@ -9,7 +9,7 @@ if __name__ == "__main__":
     okno = mask_genome()
 
     runn = FirstService()
-    runn.run()
+    runn.run(False, True, True)
 
     runn = SecondService()
     runn.run()

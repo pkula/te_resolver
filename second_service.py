@@ -132,7 +132,7 @@ class SecondService:
             n = len(self.used_ids)
             not_used_start_records = left_df[~left_df.qseqid.isin(self.used_ids)]
             not_used_end_records = right_df[~right_df.qseqid.isin(self.used_ids)]
-            self.match_not_ideal_pairs(not_used_start_records, not_used_end_records, ont_file, is_plus_strain)
+            self.match_pairs(not_used_start_records, not_used_end_records, ont_file, is_plus_strain)
             if len(self.used_ids) == n:
                 is_the_same_n = True
 
@@ -163,20 +163,20 @@ class SecondService:
 
     def blast(self, o, blast_db=True):
         left_m = self.ont_to_genome_blast(
-            f"results/first/subseq/left_m_TE_{o}_{self.te_name}_subseq.fasta",
-            f"second/left_m_{o}_{self.te_name}_genome.bl",
+            self.config.first_subseq_path / f"left_m_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
+            self.config.second_path / f"left_m_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
         )
         right_m = self.ont_to_genome_blast(
-            f"results/first/subseq/right_m_TE_{o}_{self.te_name}_subseq.fasta",
-            f"second/right_m_{o}_{self.te_name}_genome.bl",
+            self.config.first_subseq_path / f"right_m_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
+            self.config.second_path / f"right_m_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
         )
         left_p = self.ont_to_genome_blast(
-            f"results/first/subseq/left_p_TE_{o}_{self.te_name}_subseq.fasta",
-            f"second/left_p_{o}_{self.te_name}_genome.bl",
+            self.config.first_subseq_path / f"left_p_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
+            self.config.second_path / f"left_p_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
         )
         right_p = self.ont_to_genome_blast(
-            f"results/first/subseq/right_p_TE_{o}_{self.te_name}_subseq.fasta",
-            f"second/right_p_{o}_{self.te_name}_genome.bl",
+            self.config.first_subseq_path / f"right_p_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
+            self.config.second_path / f"right_p_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
         )
         return [
             [left_m, right_m], [left_p, right_p]
@@ -192,8 +192,6 @@ class SecondService:
                 f"{header_to_save}\n"
             )
 
-        os.system("mkdir -p final")
-        os.system("mkdir -p second")
         pd.options.mode.copy_on_write = True
         if blast_db:
             Blast.make_db(self.config.genome_filepath, self.masked_database)

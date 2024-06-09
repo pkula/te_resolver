@@ -27,4 +27,4 @@ def cut_genome(genome_path, ont_path, coverage, filename, from_n):
 
 if __name__ == "__main__":
     config = Config()
-    cut_genome(config.genome_filepath, "ont/K10f.fasta", 5, "reference5x1", 15)
+    cut_genome(config.genome_filepath, "ont/K10f.fasta", 5, "reference5x1", 20)

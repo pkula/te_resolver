@@ -1,5 +1,6 @@
 from pathlib import Path
 import pandas as pd
+from const import BLAST_HEADER_NAMES
 dif_percent = 30
 
 class Helpers:
@@ -52,8 +53,7 @@ class Helpers:
 
     @staticmethod
     def read_bl(filename):
-        header_names = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch', 'gapopen', 'qstart', 'qend', 'sstart', 'send', 'expect value', 'bitscore']
-        return pd.read_csv(filename, sep="\t", header=None, names=header_names)
+        return pd.read_csv(filename, sep="\t", header=None, names=BLAST_HEADER_NAMES)
 
     @staticmethod
     def save_df(df, filename):

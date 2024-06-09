@@ -9,10 +9,8 @@ from config import Config
 def mask_genome(make_db=True):
     print("start masking genome")
     config = Config()
-    te_name = config.te_name
 
-    genome_base = Helpers.get_filebase(config.genome_filepath)
-    genome_filebase = f"{te_name}_{genome_base}"
+    genome_filebase = f"{config.te_name}_{Helpers.get_filebase(config.genome_filepath)}"
     database_filepath = config.masked_genome_path / Helpers.get_filebase(config.genome_filepath)
 
     os.system(f"mkdir -p masked_genome")
@@ -21,7 +19,7 @@ def mask_genome(make_db=True):
 
     os.system(f"blastn -num_threads 20 -outfmt 6 -query {config.te_filepath} -db {database_filepath} -out {config.masked_genome_path}/{genome_filebase}.bl -perc_identity 0.9")
     te_genome_bl = Helpers.read_bl(f"{config.masked_genome_path}/{genome_filebase}.bl")
-    te_genome_bl = te_genome_bl[te_genome_bl.qseqid == te_name]
+    te_genome_bl = te_genome_bl[te_genome_bl.qseqid == config.te_name]
     te_genome_bl["start"] = te_genome_bl['sstart'].where(te_genome_bl['sstart'] <= te_genome_bl["send"], other=te_genome_bl['send'])
     te_genome_bl["stop"] = te_genome_bl['sstart'].where(te_genome_bl['sstart'] > te_genome_bl["send"], other=te_genome_bl['send'])
     # todo

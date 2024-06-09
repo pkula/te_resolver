@@ -1,0 +1,7 @@
+bio
+bioinfokit
+biopython
+ipdb
+numpy
+pandas
+
