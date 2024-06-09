@@ -26,8 +26,7 @@ Long reads from ONT sequencing
 
 ## How to run
 
-* Copy main.py file to your destination (main) directory
-* create genome, te and ont directories in main directory
+* Clone te resolver
 * copy genome in fasta format to genome directory
 * copy te to te directory
 * copy ont to ont directory
