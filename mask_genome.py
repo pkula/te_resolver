@@ -13,7 +13,6 @@ def mask_genome(make_db=True):
     genome_filebase = f"{config.te_name}_{Helpers.get_filebase(config.genome_filepath)}"
     database_filepath = config.masked_genome_path / Helpers.get_filebase(config.genome_filepath)
 
-    os.system(f"mkdir -p masked_genome")
     if make_db:
         os.system(f"makeblastdb -in {config.genome_filepath} -dbtype nucl -out {database_filepath}")
 

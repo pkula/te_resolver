@@ -57,7 +57,6 @@ class FirstService:
     def create_subsequent_fasta(self, fasta, bed_df, filename):
         # create subsequents with left and right flanks
         # site p or m
-        num = 4000
 
         # todo filenames
         parent = filename.parent
@@ -76,11 +75,11 @@ class FirstService:
             te_start = bed_rec.sstart
             te_end = bed_rec.send
 
-            left_start = te_start - num if te_start - num > 0 else 0
+            left_start = te_start - self.config.flanks_len if te_start - self.config.flanks_len > 0 else 0
             left_end = te_start
 
             right_start = te_end
-            right_end = te_end + num if te_end + num < len(record) else len(record)
+            right_end = te_end + self.config.flanks_len if te_end + self.config.flanks_len < len(record) else len(record)
 
             left_subseq_record = record[left_start:left_end]  # For the full record (with header)
             right_subseq_record = record[right_start:right_end]

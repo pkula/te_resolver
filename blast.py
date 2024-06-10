@@ -32,8 +32,8 @@ class Blast:
 
     #new
     @staticmethod
-    def _run_te_ont(query, db, out):
-        os.system(f"blastn -num_threads 20 -outfmt 6 -query {query} -db {db} -out {out} -dust no -perc_identity 0.9")
+    def _run_te_ont(query, db, out, num_threads):
+        os.system(f"blastn -num_threads {num_threads} -outfmt 6 -query {query} -db {db} -out {out} -dust no -perc_identity 0.9")
         return Helpers.read_bl(out)
 
     @staticmethod
@@ -43,9 +43,10 @@ class Blast:
                 config.te_filepath,
                 config.ont_path / base,
                 config.get_te_ont_bl_path(base),
+                config.blast_threads,
                 )
 
     @staticmethod
-    def run(query, db, out):
-        os.system(f"blastn -num_threads 20 -outfmt 6 -query {query} -db {db} -out {out} -dust no -perc_identity 0.9")
+    def run(query, db, out, num_threads):
+        os.system(f"blastn -num_threads {num_threads} -outfmt 6 -query {query} -db {db} -out {out} -dust no -perc_identity 0.9")
         return Helpers.read_bl(out)

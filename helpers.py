@@ -1,7 +1,6 @@
 from pathlib import Path
 import pandas as pd
 from const import BLAST_HEADER_NAMES
-dif_percent = 30
 
 class Helpers:
     @staticmethod
@@ -42,14 +41,14 @@ class Helpers:
         return counter
 
     @staticmethod
-    def get_from_te(fasta, te_name):
-        te_len = Helpers.get_len_fasta(fasta)[te_name]
-        return int(te_len - te_len * dif_percent / 100)
+    def get_from_te(config):
+        te_len = Helpers.get_len_fasta(config.te_filepath)[config.te_name]
+        return int(te_len - te_len * config.dif_percent / 100)
 
     @staticmethod
-    def get_to_te(fasta, te_name):
-        te_len = Helpers.get_len_fasta(fasta)[te_name]
-        return int(te_len + te_len * dif_percent / 100)
+    def get_to_te(config):
+        te_len = Helpers.get_len_fasta(config.te_filepath)[config.te_name]
+        return int(te_len + te_len * config.dif_percent / 100)
 
     @staticmethod
     def read_bl(filename):

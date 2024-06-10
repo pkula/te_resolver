@@ -2,12 +2,8 @@ import argparse
 import logging
 from helpers import Helpers
 from pathlib import Path
-
-MAIN_PATH = "."
-
-TE_FILE = "Alex1_3.fas"
-TE_NAME = 'Alex1'
-GENOME_FILE = "genomic2.fna"
+from const import MAIN_PATH, TE_FILE, TE_NAME, GENOME_FILE, FLANKS_LEN, GROUP_LEN, MAX_NONREF_LEN, DIF_PERCENT, BLAST_THREADS
+from bioinfokit.analys import Fasta
 
 
 class Config:
@@ -18,19 +14,31 @@ class Config:
 
     def prepare_parser(self):
         parser = argparse.ArgumentParser(description="TE pipeline resolver")
-
-        parser.add_argument("-w", action="store_true", help="flag default false")
-        parser.add_argument("-k", action="store", type=int, default=90, help="")
-        parser.add_argument("-v", "--verbose", action="store_true")
+        parser.add_argument("-p", "--main_path", action="store", type=str, default=MAIN_PATH, help="Main path where ont, genome and te directories exist")
+        parser.add_argument("-t", "--te_file", action="store_true", help="TE filename")
+        parser.add_argument("-g", "--genome_file", action="store_true", help="Genome filename")
+        parser.add_argument("-e", "--te_name", action="store_true", help="TE name")
+        parser.add_argument("-f", "--flanks", action="store", type=int, default=FLANKS_LEN, help="Length of flanks")
+        parser.add_argument("-r", "--groups", action="store", type=int, default=GROUP_LEN, help="Length of groups")
+        parser.add_argument("-m", "--max_nonref_len", action="store", type=int, default=MAX_NONREF_LEN, help="Max nonref length")
+        parser.add_argument("-d", "--dif_percent", action="store", type=int, default=DIF_PERCENT, help="Set length of TE from to")
+        parser.add_argument("-b", "--blast_threads", action="store", type=int, default=BLAST_THREADS, help="Number of blast threads")
         return parser
 
     def __init__(self):
         logging.info("start config")
         parser = self.prepare_parser()
-        self.args = parser.parse_args()
+        args = parser.parse_args()
+
+        self.main_path = Path(MAIN_PATH).absolute()
+
+        self.flanks_len = args.flanks
+        self.group_len = args.groups
+        self.max_nonref_len = args.max_nonref_len
+        self.dif_percent = args.dif_percent
+        self.blast_threads = args.blast_threads
 
         # main filders
-        self.main_path = Path(MAIN_PATH).absolute()
         self.results_path = self.main_path / "results"
 
         # input data
@@ -39,9 +47,9 @@ class Config:
         self.te_path = self.main_path / "te"
 
         # args
-        self.te_name = TE_NAME
-        self.te_filepath = self.te_path / TE_FILE
-        self.genome_filepath = self.genome_path / GENOME_FILE
+        self.te_filepath = self.te_path / args.te_file if args.te_file else [a for a in Path(self.te_path).glob("*")][0]
+        self.te_name = args.te_name if args.te_name else Fasta.fasta_reader(file=self.te_filepath).__next__()[0]
+        self.genome_filepath = self.genome_path / args.genome_file if args.genome_file else [a for a in Path(self.genome_path).glob("*")][0]
 
         # first part
         self.first_path = self.results_path / "first"
@@ -61,8 +69,8 @@ class Config:
 
         # set needed paths
         self.te_len = Helpers.get_len_fasta(self.te_filepath)[self.te_name]
-        self.from_te = Helpers.get_from_te(self.te_filepath, self.te_name)
-        self.to_te = Helpers.get_to_te(self.te_filepath, self.te_name)
+        self.from_te = Helpers.get_from_te(self)
+        self.to_te = Helpers.get_to_te(self)
 
         print(f"ONT: {self.ont_bases}")
         print(f"Genome: {self.genome_filepath}")

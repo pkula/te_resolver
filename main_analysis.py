@@ -8,6 +8,7 @@ if __name__ == "__main__":
     print("start")
     okno = mask_genome()
 
+    '''
     runn = FirstService()
     runn.run(False, True, True)
 
@@ -16,6 +17,5 @@ if __name__ == "__main__":
 
     runn = ThirdService()
     runn.run()
+    '''
     print("end")
-
-    #masked_genome = mask_genome(te_name, te_path, genome_path, True)

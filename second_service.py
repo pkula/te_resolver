@@ -73,7 +73,7 @@ class SecondService:
     def if_match(self, start_record, end_record, is_plus_strain):
         start = getattr(start_record, self.get_start_field(is_plus_strain))
         end = getattr(end_record, self.get_end_field(is_plus_strain))
-        return (end - start < self.config.to_te and end - start > self.config.from_te) or abs(end - start) < 200
+        return (end - start < self.config.to_te and end - start > self.config.from_te) or abs(end - start) < self.config.max_nonref_len
 
     def match_rec_df(self, start_record, end_df, is_plus_strain):
         chromosome = start_record.sseqid
@@ -138,8 +138,8 @@ class SecondService:
 
     # main function
     def add_start_and_end_te(self, left_blast, right_blast, ont_file):
-        left_blast = left_blast[left_blast.length > 600]
-        right_blast = right_blast[right_blast.length > 600]
+        left_blast = left_blast[left_blast.length > self.config.group_len]
+        right_blast = right_blast[right_blast.length > self.config.group_len]
 
         plus_left = left_blast[left_blast.sstart <= left_blast.send]
         plus_left["strain"] = "+"
@@ -159,6 +159,7 @@ class SecondService:
             fasta_filename,
             self.masked_database,
             blast_filename,
+            self.config.blast_threads
         ).sort_values(['qseqid', 'bitscore'], ascending=False).groupby(['qseqid'], as_index=False).first()
 
     def blast(self, o, blast_db=True):
@@ -223,10 +224,8 @@ class ThirdService:
     def get_first_group(self, df, field):
         first_row = df.iloc[0]
         field_value = first_row[field]
-        # group = df[(df[field] > field_value - 1700) & (df[field] < field_value + 1700)]
-        # new_df = df[(df[field] <= field_value - 1700) | (df[field] >= field_value + 1700)]
-        group = df[(df[field] > field_value - 1000) & (df[field] < field_value + 1000)]
-        new_df = df[(df[field] <= field_value - 1000) | (df[field] >= field_value + 1000)]
+        group = df[(df[field] > field_value - self.config.group_len) & (df[field] < field_value + self.config.group_len)]
+        new_df = df[(df[field] <= field_value - self.config.group_len) | (df[field] >= field_value + self.config.group_len)]
         return new_df, group
 
 
@@ -252,7 +251,7 @@ class ThirdService:
 
     def if_match(self, start_chromosome, end_chromosome, start, end):
         if start_chromosome == end_chromosome:
-            if (end - start > self.config.from_te and end - start < self.config.to_te) or (abs(end - start) < 200):
+            if (end - start > self.config.from_te and end - start < self.config.to_te) or (abs(end - start) < self.config.max_nonref_len):
                 return True
         return False
 
@@ -344,8 +343,8 @@ class ThirdService:
     def _is_ref(self, df, chromosome, start, stop):
         return (
                 (df.chromosome == chromosome)
-                & (df.start < start + 500) & (df.start > start - 500)
-                & (df.stop < stop + 500) & (df.stop > stop - 500)
+                & (df.start < start + self.config.group_len) & (df.start > start - self.config.group_len)
+                & (df.stop < stop + self.config.group_len) & (df.stop > stop - self.config.group_len)
         )
 
 
@@ -410,7 +409,7 @@ class ThirdService:
 
         is_reff = self.is_ref(df, reference)
         df['is_ref'] = "nonref"
-        df.loc[(df.length > 600), 'is_ref'] = "unknown"
+        df.loc[(df.length > self.config.group_len), 'is_ref'] = "unknown"
         df.loc[is_reff, 'is_ref'] = "ref"
 
         report = df[report_header].sort_values(by=['chromosome', 'pkt', 'start'])
