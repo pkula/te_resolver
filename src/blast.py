@@ -1,9 +1,11 @@
 import logging
 import os
 from pathlib import Path
+
 import pandas as pd
-from src.helpers import Helpers
+
 from src.config import Config
+from src.helpers import Helpers
 
 
 class Blast:
@@ -20,7 +22,7 @@ class Blast:
             os.system(f"makeblastdb -in {f} -dbtype nucl -out {name}")
         logging.info("end make db")
 
-    #new
+    # new
     @staticmethod
     def make_db(fasta_file, out):
         os.system(f"makeblastdb -in {fasta_file} -dbtype nucl -out {out}")
@@ -30,10 +32,12 @@ class Blast:
         for base, file in zip(config.ont_bases, config.ont_files):
             Blast.make_db(file, config.ont_path / base)
 
-    #new
+    # new
     @staticmethod
     def _run_te_ont(query, db, out, num_threads):
-        os.system(f"blastn -num_threads {num_threads} -outfmt 6 -query {query} -db {db} -out {out} -dust no -perc_identity 0.9")
+        os.system(
+            f"blastn -num_threads {num_threads} -outfmt 6 -query {query} -db {db} -out {out} -dust no -perc_identity 0.9"
+        )
         return Helpers.read_bl(out)
 
     @staticmethod
@@ -44,9 +48,11 @@ class Blast:
                 config.ont_path / base,
                 config.get_te_ont_bl_path(base),
                 config.blast_threads,
-                )
+            )
 
     @staticmethod
     def run(query, db, out, num_threads):
-        os.system(f"blastn -num_threads {num_threads} -outfmt 6 -query {query} -db {db} -out {out} -dust no -perc_identity 0.9")
+        os.system(
+            f"blastn -num_threads {num_threads} -outfmt 6 -query {query} -db {db} -out {out} -dust no -perc_identity 0.9"
+        )
         return Helpers.read_bl(out)

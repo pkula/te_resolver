@@ -2,13 +2,15 @@ import argparse
 import logging
 import os
 from pathlib import Path
-import pandas as pd
-from bioinfokit.analys import Fasta
-from Bio import SeqIO
+
 import numpy as np
+import pandas as pd
+from Bio import SeqIO
+from bioinfokit.analys import Fasta
+
 from src.blast import Blast
-from src.helpers import Helpers
 from src.config import Config
+from src.helpers import Helpers
 from src.mask_genome import mask_genome
 
 
@@ -16,7 +18,10 @@ class SecondService:
     def __init__(self):
         self.config = Config()
         self.te_name = self.config.te_name
-        self.masked_database = self.config.masked_genome_path / f"masked_{Helpers.get_filebase(self.config.genome_filepath)}"
+        self.masked_database = (
+            self.config.masked_genome_path
+            / f"masked_{Helpers.get_filebase(self.config.genome_filepath)}"
+        )
 
         self.plus_te_start_records = {}
         self.plus_te_end_records = {}
@@ -73,7 +78,9 @@ class SecondService:
     def if_match(self, start_record, end_record, is_plus_strain):
         start = getattr(start_record, self.get_start_field(is_plus_strain))
         end = getattr(end_record, self.get_end_field(is_plus_strain))
-        return (end - start < self.config.to_te and end - start > self.config.from_te) or abs(end - start) < self.config.max_nonref_len
+        return (
+            end - start < self.config.to_te and end - start > self.config.from_te
+        ) or abs(end - start) < self.config.max_nonref_len
 
     def match_rec_df(self, start_record, end_df, is_plus_strain):
         chromosome = start_record.sseqid
@@ -87,15 +94,21 @@ class SecondService:
         # add left and right if find
         # iterate chromosome
         # only one id
-        start_df = left_df.sort_values(by=['sseqid', 'length', self.get_start_field(is_plus_strain)])
-        end_df = right_df.sort_values(by=['sseqid', 'length', self.get_end_field(is_plus_strain)])
+        start_df = left_df.sort_values(
+            by=["sseqid", "length", self.get_start_field(is_plus_strain)]
+        )
+        end_df = right_df.sort_values(
+            by=["sseqid", "length", self.get_end_field(is_plus_strain)]
+        )
         if not len(start_df) or not len(end_df):
             return False
         for chromosome in start_df.sseqid.unique():
             l_df = start_df[(start_df.sseqid == chromosome)]
             r_df = end_df[(end_df.sseqid == chromosome)]
             for start_row in l_df.itertuples():
-                matched_right_record = self.match_rec_df(start_row, r_df, is_plus_strain)
+                matched_right_record = self.match_rec_df(
+                    start_row, r_df, is_plus_strain
+                )
                 if matched_right_record is not None:
                     if is_plus_strain:
                         self.add_start(start_row, ont_file, is_plus_strain)
@@ -109,8 +122,16 @@ class SecondService:
             r = {
                 "chromosome": record.sseqid,
                 "strain": "plus" if is_plus_strain else "minus",
-                "start": getattr(record, self.get_start_field(is_plus_strain)) if is_start else None,
-                "stop": getattr(record, self.get_end_field(is_plus_strain)) if not is_start else None,
+                "start": (
+                    getattr(record, self.get_start_field(is_plus_strain))
+                    if is_start
+                    else None
+                ),
+                "stop": (
+                    getattr(record, self.get_end_field(is_plus_strain))
+                    if not is_start
+                    else None
+                ),
                 "ont_id": f"{ont_file}:{record.qseqid}",
             }
             with open(self.config.filtered_records_filepath, "a") as f_out:
@@ -132,7 +153,9 @@ class SecondService:
             n = len(self.used_ids)
             not_used_start_records = left_df[~left_df.qseqid.isin(self.used_ids)]
             not_used_end_records = right_df[~right_df.qseqid.isin(self.used_ids)]
-            self.match_pairs(not_used_start_records, not_used_end_records, ont_file, is_plus_strain)
+            self.match_pairs(
+                not_used_start_records, not_used_end_records, ont_file, is_plus_strain
+            )
             if len(self.used_ids) == n:
                 is_the_same_n = True
 
@@ -155,43 +178,52 @@ class SecondService:
         self.match_dfs(minus_right, minus_left, ont_file, False)
 
     def ont_to_genome_blast(self, fasta_filename, blast_filename):
-        return Blast.run(
-            fasta_filename,
-            self.masked_database,
-            blast_filename,
-            self.config.blast_threads
-        ).sort_values(['qseqid', 'bitscore'], ascending=False).groupby(['qseqid'], as_index=False).first()
+        return (
+            Blast.run(
+                fasta_filename,
+                self.masked_database,
+                blast_filename,
+                self.config.blast_threads,
+            )
+            .sort_values(["qseqid", "bitscore"], ascending=False)
+            .groupby(["qseqid"], as_index=False)
+            .first()
+        )
 
     def blast(self, o, blast_db=True):
         left_m = self.ont_to_genome_blast(
-            self.config.first_subseq_path / f"left_m_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
-            self.config.second_path / f"left_m_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
+            self.config.first_subseq_path
+            / f"left_m_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
+            self.config.second_path
+            / f"left_m_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
         )
         right_m = self.ont_to_genome_blast(
-            self.config.first_subseq_path / f"right_m_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
-            self.config.second_path / f"right_m_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
+            self.config.first_subseq_path
+            / f"right_m_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
+            self.config.second_path
+            / f"right_m_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
         )
         left_p = self.ont_to_genome_blast(
-            self.config.first_subseq_path / f"left_p_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
-            self.config.second_path / f"left_p_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
+            self.config.first_subseq_path
+            / f"left_p_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
+            self.config.second_path
+            / f"left_p_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
         )
         right_p = self.ont_to_genome_blast(
-            self.config.first_subseq_path / f"right_p_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
-            self.config.second_path / f"right_p_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
+            self.config.first_subseq_path
+            / f"right_p_TE_{self.config.genome_filepath.stem}_{o}_{self.te_name}_subseq.fasta",
+            self.config.second_path
+            / f"right_p_{self.config.genome_filepath.stem}_{o}_{self.te_name}_genome.bl",
         )
-        return [
-            [left_m, right_m], [left_p, right_p]
-        ]
+        return [[left_m, right_m], [left_p, right_p]]
 
     def run(self, blast_db=True):
         # return raw report
 
         raw_report_header = ["chromosome", "strain", "start", "stop", "ont_id"]
-        header_to_save = '\t'.join(raw_report_header)
+        header_to_save = "\t".join(raw_report_header)
         with open(self.config.filtered_records_filepath, "w") as f_out:
-            f_out.write(
-                f"{header_to_save}\n"
-            )
+            f_out.write(f"{header_to_save}\n")
 
         pd.options.mode.copy_on_write = True
         if blast_db:
@@ -216,7 +248,6 @@ class SecondService:
         return pd.read_csv(self.config.filtered_records_filepath, sep="\t")
 
 
-
 class ThirdService:
     def __init__(self):
         self.config = Config()
@@ -224,10 +255,15 @@ class ThirdService:
     def get_first_group(self, df, field):
         first_row = df.iloc[0]
         field_value = first_row[field]
-        group = df[(df[field] > field_value - self.config.group_len) & (df[field] < field_value + self.config.group_len)]
-        new_df = df[(df[field] <= field_value - self.config.group_len) | (df[field] >= field_value + self.config.group_len)]
+        group = df[
+            (df[field] > field_value - self.config.group_len)
+            & (df[field] < field_value + self.config.group_len)
+        ]
+        new_df = df[
+            (df[field] <= field_value - self.config.group_len)
+            | (df[field] >= field_value + self.config.group_len)
+        ]
         return new_df, group
-
 
     def get_groups_dict(self, groups, field):
         group_dict = {}
@@ -235,7 +271,6 @@ class ThirdService:
             first_row = group.iloc[0]
             group_dict[first_row.chromosome, int(group[field].mode().median())] = group
         return group_dict
-
 
     def get_groups(self, records, field):
         all_records = records[self.raw_report[field].notnull()]
@@ -248,20 +283,22 @@ class ThirdService:
                 groups.append(g[1])
         return groups
 
-
     def if_match(self, start_chromosome, end_chromosome, start, end):
         if start_chromosome == end_chromosome:
-            if (end - start > self.config.from_te and end - start < self.config.to_te) or (abs(end - start) < self.config.max_nonref_len):
+            if (
+                end - start > self.config.from_te and end - start < self.config.to_te
+            ) or (abs(end - start) < self.config.max_nonref_len):
                 return True
         return False
-
 
     def create_record(self, chromosome, start, end, start_records, end_records):
         start_ids = set([ont_id for ont_id in start_records.ont_id])
         end_ids = set([ont_id for ont_id in end_records.ont_id])
         if start_ids.intersection(end_ids):
             pkt = 1
-        elif set([x.split(":")[0] for x in start_ids]).intersection([x.split(":")[0] for x in end_ids]):
+        elif set([x.split(":")[0] for x in start_ids]).intersection(
+            [x.split(":")[0] for x in end_ids]
+        ):
             pkt = 2
         elif start_ids and start_ids:
             pkt = 3
@@ -279,16 +316,11 @@ class ThirdService:
             "right_rec": ",".join([ont_id for ont_id in end_records.ont_id]),
         }
 
-
     def match_end_dict(self, start_chromosome, start, start_records, end_dict):
         for (end_chromosome, end), end_records in end_dict.items():
             if self.if_match(start_chromosome, end_chromosome, start, end):
-                return (end_chromosome, end),  self.create_record(
-                    start_chromosome,
-                    start,
-                    end,
-                    start_records,
-                    end_records
+                return (end_chromosome, end), self.create_record(
+                    start_chromosome, start, end, start_records, end_records
                 )
 
     def match_dicts(self, start_dict, end_dict):
@@ -297,31 +329,37 @@ class ThirdService:
         end_remaining = end_dict.copy()
         for (start_chromosome, start), start_records in start_dict.items():
             end_dict = end_remaining.copy()
-            record = self.match_end_dict(start_chromosome, start, start_records, end_dict)
+            record = self.match_end_dict(
+                start_chromosome, start, start_records, end_dict
+            )
             if record:
-                report_list.append(
-                    record[1]
-                )
+                report_list.append(record[1])
                 del start_remaining[start_chromosome, start]
                 del end_remaining[record[0][0], record[0][1]]
             # todo if not match?
         return report_list
 
-
     def save_report(self, report_list):
-        report_header = ["pkt", "chromosome", "start", "stop", "length", "left_n", "left_rec", "right_n", "right_rec"]
-        header_to_save = '\t'.join(report_header)
+        report_header = [
+            "pkt",
+            "chromosome",
+            "start",
+            "stop",
+            "length",
+            "left_n",
+            "left_rec",
+            "right_n",
+            "right_rec",
+        ]
+        header_to_save = "\t".join(report_header)
         with open(self.config.raw_report_filepath, "w") as f_out:
-            f_out.write(
-                f"{header_to_save}\n"
-            )
+            f_out.write(f"{header_to_save}\n")
         for r in report_list:
             with open(self.config.raw_report_filepath, "a") as f_out:
                 f_out.write(
                     f"{r['pkt']}\t{r['chromosome']}\t{r['start']}\t{r['stop']}\t{r['length']}\t"
                     f"{r['left_n']}\t{r['left_rec']}\t{r['right_n']}\t{r['right_rec']}\n"
                 )
-
 
     def save_first_point_report(self):
 
@@ -335,18 +373,26 @@ class ThirdService:
 
         self.save_report(report_list)
 
-        report = pd.read_csv(self.config.raw_report_filepath, sep="\t").sort_values(by=['chromosome', 'pkt', 'start'])
-        report.to_csv(self.config.raw_report_filepath, sep='\t', index=False, encoding='utf-8', header=True)
+        report = pd.read_csv(self.config.raw_report_filepath, sep="\t").sort_values(
+            by=["chromosome", "pkt", "start"]
+        )
+        report.to_csv(
+            self.config.raw_report_filepath,
+            sep="\t",
+            index=False,
+            encoding="utf-8",
+            header=True,
+        )
         return report
-
 
     def _is_ref(self, df, chromosome, start, stop):
         return (
-                (df.chromosome == chromosome)
-                & (df.start < start + self.config.group_len) & (df.start > start - self.config.group_len)
-                & (df.stop < stop + self.config.group_len) & (df.stop > stop - self.config.group_len)
+            (df.chromosome == chromosome)
+            & (df.start < start + self.config.group_len)
+            & (df.start > start - self.config.group_len)
+            & (df.stop < stop + self.config.group_len)
+            & (df.stop > stop - self.config.group_len)
         )
-
 
     def is_ref(self, df, reference):
         is_reference = None
@@ -355,9 +401,12 @@ class ThirdService:
             start = rec[2]
             stop = rec[3]
             part_is_reference = self._is_ref(df, chromosome, start, stop)
-            is_reference = is_reference | part_is_reference if is_reference is not None else part_is_reference
+            is_reference = (
+                is_reference | part_is_reference
+                if is_reference is not None
+                else part_is_reference
+            )
         return is_reference
-
 
     def get_rec(self, x, o):
         records = []
@@ -369,7 +418,6 @@ class ThirdService:
                 records.append(o_id)
         return ",".join(records)
 
-
     def get_num(self, x, o):
         records = []
         for r in x.split(","):
@@ -380,40 +428,33 @@ class ThirdService:
                 records.append(o_id)
         return len(records)
 
-
     def generate_second_report(self, reference):
         report_header = ["pkt", "chromosome", "start", "stop", "length", "is_ref"]
         df = pd.read_csv(self.config.raw_report_filepath, sep="\t")
         for o in self.config.ont_bases:
-            df[f"left_{o}_num"] = df.left_rec.apply(
-                self.get_num,
-                args=[o]
-            )
-            df[f"left_{o}_rec"] = df.left_rec.apply(
-                self.get_rec,
-                args=[o]
-            )
+            df[f"left_{o}_num"] = df.left_rec.apply(self.get_num, args=[o])
+            df[f"left_{o}_rec"] = df.left_rec.apply(self.get_rec, args=[o])
             report_header.append(f"left_{o}_num")
             report_header.append(f"left_{o}_rec")
 
-            df[f"right_{o}_num"] = df.right_rec.apply(
-                self.get_num,
-                args=[o]
-            )
-            df[f"right_{o}_rec"] = df.right_rec.apply(
-                self.get_rec,
-                args=[o]
-            )
+            df[f"right_{o}_num"] = df.right_rec.apply(self.get_num, args=[o])
+            df[f"right_{o}_rec"] = df.right_rec.apply(self.get_rec, args=[o])
             report_header.append(f"right_{o}_num")
             report_header.append(f"right_{o}_rec")
 
         is_reff = self.is_ref(df, reference)
-        df['is_ref'] = "nonref"
-        df.loc[(df.length > self.config.group_len), 'is_ref'] = "unknown"
-        df.loc[is_reff, 'is_ref'] = "ref"
+        df["is_ref"] = "nonref"
+        df.loc[(df.length > self.config.group_len), "is_ref"] = "unknown"
+        df.loc[is_reff, "is_ref"] = "ref"
 
-        report = df[report_header].sort_values(by=['chromosome', 'pkt', 'start'])
-        report.to_csv(self.config.final_report_filepath, sep='\t', index=False, encoding='utf-8', header=True)
+        report = df[report_header].sort_values(by=["chromosome", "pkt", "start"])
+        report.to_csv(
+            self.config.final_report_filepath,
+            sep="\t",
+            index=False,
+            encoding="utf-8",
+            header=True,
+        )
         return report
 
     def run(self):
@@ -422,4 +463,3 @@ class ThirdService:
         first_report = self.save_first_point_report()
         second_report = self.generate_second_report(reference)
         return first_report, second_report
-

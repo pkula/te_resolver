@@ -1,6 +1,8 @@
 import random
-from src.helpers import Helpers
+
 from src.config import Config
+from src.helpers import Helpers
+
 
 def _rand_split(sequence, splits):
     for splitLen in splits:
@@ -9,9 +11,11 @@ def _rand_split(sequence, splits):
         yield sequence[:splitLen]
         sequence = sequence[splitLen::]
 
+
 def _rand_gen(int_list):
     while True:
         yield int(random.choice(int_list))
+
 
 def cut_genome(genome_path, ont_path, coverage, filename, from_n):
     possibility_len = list(Helpers.get_len_fasta(ont_path).values())
@@ -20,10 +24,11 @@ def cut_genome(genome_path, ont_path, coverage, filename, from_n):
         print(i)
         for name, genome_sequence in Helpers.get_fasta(genome_path):
             print(name)
-            with open(filename, 'a') as file:
+            with open(filename, "a") as file:
                 for seq in _rand_split(genome_sequence, _rand_gen(possibility_len)):
                     n = n + 1
                     file.write(f">{name}_{i}_{n}\n{seq}\n")
+
 
 if __name__ == "__main__":
     config = Config()

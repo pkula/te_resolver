@@ -1,8 +1,8 @@
 import logging
-from src.mask_genome import mask_genome
+
 from src.first_service import FirstService
-from src.second_service import SecondService
-from src.second_service import ThirdService
+from src.mask_genome import mask_genome
+from src.second_service import SecondService, ThirdService
 
 if __name__ == "__main__":
     print("start")

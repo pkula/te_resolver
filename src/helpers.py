@@ -1,6 +1,9 @@
 from pathlib import Path
+
 import pandas as pd
+
 from src.const import BLAST_HEADER_NAMES
+
 
 class Helpers:
     @staticmethod
@@ -8,6 +11,7 @@ class Helpers:
         return [a for a in Path(directory).glob("*.fasta")] + [
             a for a in Path(directory).glob("*.fa")
         ]
+
     @staticmethod
     def get_fasta(filename):
         n = 0
@@ -15,7 +19,7 @@ class Helpers:
         name = ""
         with open(filename) as f:
             for line in f.readlines():
-                if line.startswith('>'):
+                if line.startswith(">"):
                     n = n + 1
                     if not n == 1:
                         yield name, sequence
@@ -32,12 +36,14 @@ class Helpers:
         with open(filename) as f:
             name = ""
             for line in f.readlines():
-                if line.startswith('>'):
+                if line.startswith(">"):
                     name = line[1:].strip()
                     counter[name] = 0
                 else:
                     if name:
-                        counter[name] = counter[name] + len(line.strip()) - line.count("~")
+                        counter[name] = (
+                            counter[name] + len(line.strip()) - line.count("~")
+                        )
         return counter
 
     @staticmethod
@@ -56,7 +62,7 @@ class Helpers:
 
     @staticmethod
     def save_df(df, filename):
-        df.to_csv(filename, sep='\t', index=False, encoding='utf-8', header=False)
+        df.to_csv(filename, sep="\t", index=False, encoding="utf-8", header=False)
 
     @staticmethod
     def get_filebase(file):

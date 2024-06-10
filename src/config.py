@@ -1,9 +1,12 @@
 import argparse
 import logging
 from pathlib import Path
-from src.helpers import Helpers
-from src.const import MAIN_PATH, TE_FILE, TE_NAME, GENOME_FILE, FLANKS_LEN, GROUP_LEN, MAX_NONREF_LEN, DIF_PERCENT, BLAST_THREADS
+
 from bioinfokit.analys import Fasta
+
+from src.const import (BLAST_THREADS, DIF_PERCENT, FLANKS_LEN, GENOME_FILE,
+                       GROUP_LEN, MAIN_PATH, MAX_NONREF_LEN, TE_FILE, TE_NAME)
+from src.helpers import Helpers
 
 
 class Config:
@@ -14,21 +17,67 @@ class Config:
 
     def prepare_parser(self):
         parser = argparse.ArgumentParser(description="TE pipeline resolver")
-        parser.add_argument("-p", "--main_path", action="store", type=str, default=MAIN_PATH, help="Main path where ont, genome and te directories exist")
+        parser.add_argument(
+            "-p",
+            "--main_path",
+            action="store",
+            type=str,
+            default=MAIN_PATH,
+            help="Main path where ont, genome and te directories exist",
+        )
         parser.add_argument("-t", "--te_file", action="store_true", help="TE filename")
-        parser.add_argument("-g", "--genome_file", action="store_true", help="Genome filename")
+        parser.add_argument(
+            "-g", "--genome_file", action="store_true", help="Genome filename"
+        )
         parser.add_argument("-e", "--te_name", action="store_true", help="TE name")
-        parser.add_argument("-f", "--flanks", action="store", type=int, default=FLANKS_LEN, help="Length of flanks")
-        parser.add_argument("-r", "--groups", action="store", type=int, default=GROUP_LEN, help="Length of groups")
-        parser.add_argument("-m", "--max_nonref_len", action="store", type=int, default=MAX_NONREF_LEN, help="Max nonref length")
-        parser.add_argument("-d", "--dif_percent", action="store", type=int, default=DIF_PERCENT, help="Set length of TE from to")
-        parser.add_argument("-b", "--blast_threads", action="store", type=int, default=BLAST_THREADS, help="Number of blast threads")
-
-        #todo not used - in run
-        parser.add_argument("-c", "--convert_fq", action="store_true", help="Convert ont fq to fasta")
-        parser.add_argument("-l", "--create_db", action="store_false", help="Make blast dbs")
+        parser.add_argument(
+            "-f",
+            "--flanks",
+            action="store",
+            type=int,
+            default=FLANKS_LEN,
+            help="Length of flanks",
+        )
+        parser.add_argument(
+            "-r",
+            "--groups",
+            action="store",
+            type=int,
+            default=GROUP_LEN,
+            help="Length of groups",
+        )
+        parser.add_argument(
+            "-m",
+            "--max_nonref_len",
+            action="store",
+            type=int,
+            default=MAX_NONREF_LEN,
+            help="Max nonref length",
+        )
+        parser.add_argument(
+            "-d",
+            "--dif_percent",
+            action="store",
+            type=int,
+            default=DIF_PERCENT,
+            help="Set length of TE from to",
+        )
+        parser.add_argument(
+            "-b",
+            "--blast_threads",
+            action="store",
+            type=int,
+            default=BLAST_THREADS,
+            help="Number of blast threads",
+        )
+        # todo not used - in run
+        parser.add_argument(
+            "-c", "--convert_fq", action="store_true", help="Convert ont fq to fasta"
+        )
+        parser.add_argument(
+            "-l", "--create_db", action="store_false", help="Make blast dbs"
+        )
         parser.add_argument("-o", "--do_blast", action="store_false", help="Do blasts")
-
         return parser
 
     def __init__(self):
@@ -53,9 +102,21 @@ class Config:
         self.te_path = self.main_path / "te"
 
         # args
-        self.te_filepath = self.te_path / args.te_file if args.te_file else [a for a in Path(self.te_path).glob("*")][0]
-        self.te_name = args.te_name if args.te_name else Fasta.fasta_reader(file=self.te_filepath).__next__()[0]
-        self.genome_filepath = self.genome_path / args.genome_file if args.genome_file else [a for a in Path(self.genome_path).glob("*")][0]
+        self.te_filepath = (
+            self.te_path / args.te_file
+            if args.te_file
+            else [a for a in Path(self.te_path).glob("*")][0]
+        )
+        self.te_name = (
+            args.te_name
+            if args.te_name
+            else Fasta.fasta_reader(file=self.te_filepath).__next__()[0]
+        )
+        self.genome_filepath = (
+            self.genome_path / args.genome_file
+            if args.genome_file
+            else [a for a in Path(self.genome_path).glob("*")][0]
+        )
 
         # first part
         self.first_path = self.results_path / "first"
@@ -65,10 +126,18 @@ class Config:
 
         # second part
         self.second_path = self.results_path / "second"
-        self.report_filebase = f"{self.genome_filepath.stem}_{'_'.join(self.ont_bases)}_{self.te_name}"
-        self.filtered_records_filepath = self.second_path / f"filtered_{self.report_filebase}"
-        self.raw_report_filepath = self.second_path / f"raw_report_{self.report_filebase}"
-        self.final_report_filepath = self.second_path / f"final_report_{self.report_filebase}"
+        self.report_filebase = (
+            f"{self.genome_filepath.stem}_{'_'.join(self.ont_bases)}_{self.te_name}"
+        )
+        self.filtered_records_filepath = (
+            self.second_path / f"filtered_{self.report_filebase}"
+        )
+        self.raw_report_filepath = (
+            self.second_path / f"raw_report_{self.report_filebase}"
+        )
+        self.final_report_filepath = (
+            self.second_path / f"final_report_{self.report_filebase}"
+        )
 
         # masked genome
         self.masked_genome_path = self.results_path / "masked_genome"
@@ -94,18 +163,19 @@ class Config:
         self.masked_genome_path.mkdir(parents=True, exist_ok=True)
         self.second_path.mkdir(parents=True, exist_ok=True)
 
-
     @property
     def ont_files(self):
         return Helpers.get_fasta_files(self.ont_path)
-
 
     @property
     def ont_bases(self):
         return [f.stem for f in self.ont_files]
 
     def get_te_ont_bl_path(self, ont_filebase):
-        return self.first_blast_path / f"TE_{self.genome_filepath.stem}_{ont_filebase}_{self.te_name}.bl"
+        return (
+            self.first_blast_path
+            / f"TE_{self.genome_filepath.stem}_{ont_filebase}_{self.te_name}.bl"
+        )
 
     def get_ont_filepath_from_ont_base(self, ont_filebase):
         for file in self.ont_files:
