@@ -2,8 +2,8 @@ import logging
 import os
 import pandas as pd
 
-from helpers import Helpers
-from config import Config
+from src.helpers import Helpers
+from src.config import Config
 
 
 def mask_genome(make_db=True):

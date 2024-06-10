@@ -1,8 +1,8 @@
 import argparse
 import logging
-from helpers import Helpers
 from pathlib import Path
-from const import MAIN_PATH, TE_FILE, TE_NAME, GENOME_FILE, FLANKS_LEN, GROUP_LEN, MAX_NONREF_LEN, DIF_PERCENT, BLAST_THREADS
+from src.helpers import Helpers
+from src.const import MAIN_PATH, TE_FILE, TE_NAME, GENOME_FILE, FLANKS_LEN, GROUP_LEN, MAX_NONREF_LEN, DIF_PERCENT, BLAST_THREADS
 from bioinfokit.analys import Fasta
 
 
@@ -23,6 +23,12 @@ class Config:
         parser.add_argument("-m", "--max_nonref_len", action="store", type=int, default=MAX_NONREF_LEN, help="Max nonref length")
         parser.add_argument("-d", "--dif_percent", action="store", type=int, default=DIF_PERCENT, help="Set length of TE from to")
         parser.add_argument("-b", "--blast_threads", action="store", type=int, default=BLAST_THREADS, help="Number of blast threads")
+
+        #todo not used - in run
+        parser.add_argument("-c", "--convert_fq", action="store_true", help="Convert ont fq to fasta")
+        parser.add_argument("-l", "--create_db", action="store_false", help="Make blast dbs")
+        parser.add_argument("-o", "--do_blast", action="store_false", help="Do blasts")
+
         return parser
 
     def __init__(self):

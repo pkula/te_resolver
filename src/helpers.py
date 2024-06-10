@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from const import BLAST_HEADER_NAMES
+from src.const import BLAST_HEADER_NAMES
 
 class Helpers:
     @staticmethod

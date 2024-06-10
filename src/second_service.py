@@ -6,10 +6,10 @@ import pandas as pd
 from bioinfokit.analys import Fasta
 from Bio import SeqIO
 import numpy as np
-from blast import Blast
-from helpers import Helpers
-from config import Config
-from mask_genome import mask_genome
+from src.blast import Blast
+from src.helpers import Helpers
+from src.config import Config
+from src.mask_genome import mask_genome
 
 
 class SecondService:

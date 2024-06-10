@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 import pandas as pd
 from Bio import SeqIO
-from config import Config
-from blast import Blast
-from helpers import Helpers
+from src.config import Config
+from src.blast import Blast
+from src.helpers import Helpers
 
 
 class FirstService:
