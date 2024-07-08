@@ -12,16 +12,6 @@ class Blast:
     def __init__(self):
         self.config = Config()
 
-    # todo
-    def make_ont_db(self):
-        logging.info("start make db")
-        pass_path = self.config.pass_reads_merged_path
-
-        for f in Helpers.get_fasta_files(pass_path):
-            name = pass_path / f.name.split(".")[0]
-            os.system(f"makeblastdb -in {f} -dbtype nucl -out {name}")
-        logging.info("end make db")
-
     # new
     @staticmethod
     def make_db(fasta_file, out):
@@ -29,8 +19,9 @@ class Blast:
 
     @staticmethod
     def make_ont_db(config):
-        for base, file in zip(config.ont_bases, config.ont_files):
-            Blast.make_db(file, config.ont_path / base)
+        for base in config.ont_bases:
+            file = config.get_ont_filepath_from_ont_base(base)
+            Blast.make_db(file, config.db_path / base)
 
     # new
     @staticmethod
@@ -45,7 +36,7 @@ class Blast:
         for base in config.ont_bases:
             Blast._run_te_ont(
                 config.te_filepath,
-                config.ont_path / base,
+                config.db_path / base,
                 config.get_te_ont_bl_path(base),
                 config.blast_threads,
             )

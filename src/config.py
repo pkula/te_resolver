@@ -4,8 +4,8 @@ from pathlib import Path
 
 from bioinfokit.analys import Fasta
 
-from src.const import (BLAST_THREADS, DIF_PERCENT, FLANKS_LEN, GENOME_FILE,
-                       GROUP_LEN, MAIN_PATH, MAX_NONREF_LEN, TE_FILE, TE_NAME)
+from src.const import (BLAST_THREADS, DIF_PERCENT, FLANKS_LEN, GROUP_LEN,
+                       MAIN_PATH, MAX_NONREF_LEN)
 from src.helpers import Helpers
 
 
@@ -18,6 +18,14 @@ class Config:
     def prepare_parser(self):
         parser = argparse.ArgumentParser(description="TE pipeline resolver")
         parser.add_argument(
+            "-s",
+            "--script",
+            action="store",
+            type=str,
+            default="finder", # finder, cutter,
+            help="Script",
+        )
+        parser.add_argument(
             "-p",
             "--main_path",
             action="store",
@@ -25,11 +33,11 @@ class Config:
             default=MAIN_PATH,
             help="Main path where ont, genome and te directories exist",
         )
-        parser.add_argument("-t", "--te_file", action="store_true", help="TE filename")
+        parser.add_argument("-t", "--te_file", action="store", help="TE filename")
         parser.add_argument(
-            "-g", "--genome_file", action="store_true", help="Genome filename"
+            "-g", "--genome_file", action="store", help="Genome filename"
         )
-        parser.add_argument("-e", "--te_name", action="store_true", help="TE name")
+        parser.add_argument("-e", "--te_name", action="store", help="TE name")
         parser.add_argument(
             "-f",
             "--flanks",
@@ -85,7 +93,18 @@ class Config:
         parser = self.prepare_parser()
         args = parser.parse_args()
 
-        self.main_path = Path(MAIN_PATH).absolute()
+        self.script = args.script
+
+        self.convert_fq = args.convert_fq
+        self.create_db = args.create_db
+        self.do_blast = args.do_blast
+
+
+        self.main_path = (
+            Path(args.main_path).absolute()
+            if args.main_path
+            else Path(MAIN_PATH).absolute()
+        )
 
         self.flanks_len = args.flanks
         self.group_len = args.groups
@@ -100,6 +119,7 @@ class Config:
         self.genome_path = self.main_path / "genome"
         self.ont_path = self.main_path / "ont"
         self.te_path = self.main_path / "te"
+        self.db_path = self.main_path / "db"
 
         # args
         self.te_filepath = (
@@ -162,6 +182,7 @@ class Config:
         self.first_subseq_path.mkdir(parents=True, exist_ok=True)
         self.masked_genome_path.mkdir(parents=True, exist_ok=True)
         self.second_path.mkdir(parents=True, exist_ok=True)
+        self.db_path.mkdir(parents=True, exist_ok=True)
 
     @property
     def ont_files(self):

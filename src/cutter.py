@@ -2,6 +2,7 @@ import random
 
 from src.config import Config
 from src.helpers import Helpers
+from bioinfokit.analys import Fasta
 
 
 def _rand_split(sequence, splits):
@@ -32,4 +33,4 @@ def cut_genome(genome_path, ont_path, coverage, filename, from_n):
 
 if __name__ == "__main__":
     config = Config()
-    cut_genome(config.genome_filepath, "../ont/K10f.fasta", 5, "reference5x1", 20)
+    cut_genome(config.genome_filepath, config.ont_path / "K10f.fasta", 5, "reference5x1", 30)
