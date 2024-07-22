@@ -78,6 +78,32 @@ class Config:
             default=BLAST_THREADS,
             help="Number of blast threads",
         )
+        parser.add_argument(
+            "-i",
+            "--cutter_coverage",
+            action="store",
+            type=int,
+            help="Cutter coverage",
+        )
+        parser.add_argument(
+            "-n",
+            "--cutter_from_n",
+            action="store",
+            type=int,
+            help="Cutter from_n",
+        )
+        parser.add_argument(
+            "-j",
+            "--sequencing_filename",
+            action="store",
+            help="Sequencing filename for cutter",
+        )
+        parser.add_argument(
+            "-z",
+            "--cutter_out_filename",
+            action="store",
+            help="Cutter out filename",
+        )
         # todo not used - in run
         parser.add_argument(
             "-c", "--convert_fq", action="store_true", help="Convert ont fq to fasta"
@@ -120,6 +146,13 @@ class Config:
         self.ont_path = self.main_path / "ont"
         self.te_path = self.main_path / "te"
         self.db_path = self.main_path / "db"
+
+        # for cutter only
+        self.cutter_sequencing_filename = self.ont_path / args.sequencing_filename if args.sequencing_filename else None
+        self.cutter_coverage = args.cutter_coverage
+        self.cutter_out_filename = args.cutter_out_filename
+        self.cutter_from_n = args.cutter_from_n
+
 
         # args
         self.te_filepath = (

@@ -19,7 +19,7 @@ if __name__ == "__main__":
         runn = ThirdService()
         runn.run()
     elif config.script == "cutter":
-        cut_genome(config.genome_filepath, config.ont_path / "K10f.fasta", 5, "reference5x1", 30)
+        cut_genome(config.genome_filepath, config.cutter_sequencing_filename, config.cutter_coverage if config.cutter_coverage else 5, config.cutter_out_filename, config.cutter_from_n if config.cutter_from_n else 0)
     elif config.script == "masker":
         mask_genome()
     print("end")

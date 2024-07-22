@@ -1,6 +1,5 @@
 import random
 
-from src.config import Config
 from src.helpers import Helpers
 from bioinfokit.analys import Fasta
 
@@ -29,8 +28,3 @@ def cut_genome(genome_path, ont_path, coverage, filename, from_n):
                 for seq in _rand_split(genome_sequence, _rand_gen(possibility_len)):
                     n = n + 1
                     file.write(f">{name}_{i}_{n}\n{seq}\n")
-
-
-if __name__ == "__main__":
-    config = Config()
-    cut_genome(config.genome_filepath, config.ont_path / "K10f.fasta", 5, "reference5x1", 30)
